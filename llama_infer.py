@@ -18,14 +18,14 @@ if __name__ == '__main__':
                         help="Path of the config file.")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Batch size.")
-    parser.add_argument("--seq_length", type=int, default=128,
+    parser.add_argument("--seq_length", type=int, default=64,
                         help="Sequence length.")
     parser.add_argument("--use_int8", action="store_true")
     parser.add_argument("--top_k", type=int, default=40)
-    parser.add_argument("--top_p", type=float, default=0)
-    parser.add_argument("--temperature", type=float, default=1.0)
+    parser.add_argument("--top_p", type=float, default=0.95)
+    parser.add_argument("--temperature", type=float, default=0.8)
     parser.add_argument("--repetition_penalty_range", type=int, default=1024)
-    parser.add_argument("--repetition_penalty_slope", type=float, default=0.95)
+    parser.add_argument("--repetition_penalty_slope", type=float, default=0)
     parser.add_argument("--repetition_penalty", type=float, default=1.15)
 
     parser.add_argument("--spm_model_path", default=None, type=str,
@@ -40,6 +40,7 @@ if __name__ == '__main__':
 
     torch.set_default_tensor_type(torch.HalfTensor)
     model = LLaMa(args)
+    torch.set_default_tensor_type(torch.FloatTensor)
     checkpoint = torch.load(args.load_model_path, map_location='cpu')
     for parameter_name, parameter in model.named_parameters():
         if 'target' in parameter_name:
@@ -49,14 +50,18 @@ if __name__ == '__main__':
         else:
             parameter.data = checkpoint[parameter_name]
         parameter.requires_grad = False
-
+    del checkpoint
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
+    model.eval()
     lm_generation = LmGeneration(model, args.tokenizer)
     prompts = []
     with open(args.test_path, 'r', encoding='utf-8') as f:
         for line in f:
             prompts.append(line)
-    # prompts = ['this is a test. \n']
-    result = lm_generation.generate(args, prompts)
-    print(result)
+    with torch.no_grad():
+        result = lm_generation.generate(args, prompts)
+
+    with open(args.prediction_path, 'w', encoding='utf-8') as f:
+        for res in result:
+            f.write(res + '\n')

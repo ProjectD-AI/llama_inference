@@ -13,7 +13,7 @@ class NormalLinear(nn.Linear):
 
 
 class BnbInt8Linear(bnb.nn.Linear8bitLt):
-    def __int__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(has_fp16_weights=False, threshold=6.0, *args, **kwargs)
 
     def reset_parameters(self) -> None:
@@ -37,7 +37,7 @@ class WordEmbedding(nn.Module):
 
 
 class MultiHeadedAttention(nn.Module):
-    def __init__(self, args, hidden_size, heads_num, attention_head_size, has_bias=True, use_int8=False):
+    def __init__(self, args, hidden_size, heads_num, attention_head_size, has_bias=True, use_int8=True):
         super(MultiHeadedAttention, self).__init__()
         self.heads_num = heads_num
 
@@ -46,7 +46,7 @@ class MultiHeadedAttention(nn.Module):
 
         Linear = get_linear_layer(use_int8)
         self.linear_layers = nn.ModuleList(
-            [Linear(hidden_size, self.inner_hidden_size, bias=has_bias,) for _ in range(3)]
+            [Linear(hidden_size, self.inner_hidden_size, bias=has_bias) for _ in range(3)]
         )
 
         self.final_linear = Linear(self.inner_hidden_size, hidden_size, bias=has_bias)
@@ -54,18 +54,18 @@ class MultiHeadedAttention(nn.Module):
         # add cache to reduce compute source.
         self.cache_k = torch.zeros(
             (args.batch_size, args.seq_length, self.heads_num, self.per_head_size)
-        )
+        ).cuda()
         self.cache_v = torch.zeros(
             (args.batch_size, args.seq_length, self.heads_num, self.per_head_size)
-        )
+        ).cuda()
 
     def forward(self, key, value, query, start_pos, mask, freqs_cis):
         batch_size, seq_length, _ = query.size()
         heads_num = self.heads_num
         per_head_size = self.per_head_size
-
         query, key, value = [l(x).view(batch_size, -1, heads_num, per_head_size) \
                              for l, x in zip(self.linear_layers, (query, key, value))]
+        query, key = apply_rotary_emb(query, key, freqs_cis=freqs_cis)
         self.cache_k = self.cache_k.to(key)
         self.cache_v = self.cache_v.to(value)
 
@@ -89,7 +89,7 @@ class MultiHeadedAttention(nn.Module):
 
 
 class GatedFeedForward(nn.Module):
-    def __init__(self, hidden_size, feedforward_size, has_bias=True, use_int8=False):
+    def __init__(self, hidden_size, feedforward_size, has_bias=True, use_int8=True):
         super(GatedFeedForward, self).__init__()
         Linear = get_linear_layer(use_int8)
         self.linear_gate = Linear(hidden_size, feedforward_size, bias=has_bias)
@@ -162,7 +162,7 @@ class TransformerEncoder(nn.Module):
             mask = mask.repeat(batch_size, 1, 1, 1)
 
         hidden = emb
-        freqs_cis = self.freqs_cis[:seq_length].to(hidden.device)
+        freqs_cis = self.freqs_cis[start_pos: start_pos + seq_length].to(hidden.device)
 
         for i in range(self.layers_num):
             hidden = self.transformer[i](hidden, start_pos, mask, freqs_cis=freqs_cis)
