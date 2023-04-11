@@ -18,7 +18,7 @@ if __name__ == '__main__':
                         help="Path of the config file.")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Batch size.")
-    parser.add_argument("--seq_length", type=int, default=32,
+    parser.add_argument("--seq_length", type=int, default=128,
                         help="Sequence length.")
     parser.add_argument("--use_int8", action="store_true")
     parser.add_argument("--top_k", type=int, default=40)
@@ -52,7 +52,11 @@ if __name__ == '__main__':
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-
-    lm_genetation = LmGeneration(model, args.tokenizer)
-    prompts = ['this is a test. \n']
-    lm_genetation.generate(args, prompts)
+    lm_generation = LmGeneration(model, args.tokenizer)
+    prompts = []
+    with open(args.test_path, 'r', encoding='utf-8') as f:
+        for line in f:
+            prompts.append(line)
+    # prompts = ['this is a test. \n']
+    result = lm_generation.generate(args, prompts)
+    print(result)

@@ -29,7 +29,7 @@ def top_k_top_p_filtering(logits, top_k, top_p):
     top_k = min(top_k, logits.size(-1))  # Safety check
     if top_k > 0:
         # Remove all tokens with a probability less than the last token of the top-k
-        indices_to_remove = logits < torch.topk(logits, top_k)[0][..., -1, None]
+        indices_to_remove = logits < torch.topk(logits.float(), top_k)[0][..., -1, None]
         logits[indices_to_remove] = -float("Inf")
 
     if top_p > 0.0:
@@ -102,21 +102,21 @@ class LmGeneration:
         start_pos = min_prompt_len
         prev_pos = 0
         for cur_pos in range(start_pos, total_len):
-            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos).float()
             if args.temperature > 0:
-                logits = top_k_top_p_filtering(logits, top_k=args.top_k, top_p=args.top_p)
-                logits = apply_temperature(logits, args.temperature)
-                logits = apply_advanced_repetition_penalty(
+                next_token_scores = top_k_top_p_filtering(logits, top_k=args.top_k, top_p=args.top_p)
+                next_token_scores = apply_temperature(logits, args.temperature)
+                next_token_scores = apply_advanced_repetition_penalty(
                     tokens[:, :cur_pos],
-                    logits,
+                    next_token_scores,
                     args.repetition_penalty_range,
                     args.repetition_penalty_slope,
                     args.repetition_penalty
                 )
-                scores = F.softmax(logits, dim=-1)
+                scores = F.softmax(next_token_scores, dim=-1)
                 next_token = torch.multinomial(scores, num_samples=1).squeeze(1)
             else:
-                next_token = torch.argmax(logits, dim=-1)
+                next_token = torch.argmax(next_token_scores, dim=-1)
             next_token = next_token.reshape(-1)
             next_token = torch.where(
                 mask[:, cur_pos], tokens[:, cur_pos], next_token
@@ -133,5 +133,6 @@ class LmGeneration:
             except ValueError:
                 pass
             decoder.append(self.tokenizer.decode(t))
-        print(decoder)
+
+        return decoder
 

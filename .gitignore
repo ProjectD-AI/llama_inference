@@ -1,2 +1,4 @@
 infer.sh
 .gitignore
+.idea
+__pycache__
