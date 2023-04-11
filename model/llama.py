@@ -99,7 +99,7 @@ class GatedFeedForward(nn.Module):
 
     def forward(self, x):
         # gate = self.act(self.linear_gate(x))
-        gate = self.act(self.linear_gate(x).float()).type_as(x)
+        gate = self.act(self.linear_gate(x)).type_as(x)
         inter_linear = self.linear_1(x)
         inter = gate * inter_linear
         output = self.linear_2(inter)

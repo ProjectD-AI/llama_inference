@@ -102,10 +102,10 @@ class LmGeneration:
         start_pos = min_prompt_len
         prev_pos = 0
         for cur_pos in range(start_pos, total_len):
-            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos).float()
+            logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
             if args.temperature > 0:
                 next_token_scores = top_k_top_p_filtering(logits, top_k=args.top_k, top_p=args.top_p)
-                next_token_scores = apply_temperature(logits, args.temperature)
+                next_token_scores = apply_temperature(next_token_scores, args.temperature)
                 next_token_scores = apply_advanced_repetition_penalty(
                     tokens[:, :cur_pos],
                     next_token_scores,
