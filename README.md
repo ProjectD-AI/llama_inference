@@ -1,4 +1,4 @@
-[**中文**](https://github.com/fengyh3/llama_inference/blob/main/README.md) | [**英文**](https://github.com/fengyh3/llama_inference/blob/main/README_en.md) 
+[**中文**](https://github.com/fengyh3/llama_inference/blob/main/README.md) | [**English**](https://github.com/fengyh3/llama_inference/blob/main/README_en.md) 
 
 ## 基于TencentPretrain的LLaMa推理 
 
