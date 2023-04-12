@@ -10,7 +10,6 @@ app = Flask(__name__)
 args = None
 lm_generation = None
 torch.cuda.set_device(0)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def init_model():
@@ -20,15 +19,11 @@ def init_model():
 
     parser.add_argument("--load_model_path", default=None, type=str,
                         help="Path of the input model.")
-    parser.add_argument("--test_path", type=str, required=True,
-                        help="Path of the testset.")
-    parser.add_argument("--prediction_path", type=str, required=True,
-                        help="Path of the prediction file.")
     parser.add_argument("--config_path", type=str, required=True,
                         help="Path of the config file.")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Batch size.")
-    parser.add_argument("--seq_length", type=int, default=64,
+    parser.add_argument("--seq_length", type=int, default=128,
                         help="Sequence length.")
     parser.add_argument("--use_int8", action="store_true")
     parser.add_argument("--top_k", type=int, default=40)
@@ -61,6 +56,7 @@ def init_model():
             parameter.data = checkpoint[parameter_name]
         parameter.requires_grad = False
     del checkpoint
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     model.eval()
     lm_generation = LmGeneration(model, args.tokenizer)
@@ -69,6 +65,8 @@ def init_model():
 @app.route("/chat", methods=['POST'])
 def chat():
     question = request.json.get("question")
+    if isinstance(question, str):
+        question = [question, ]
     try:
         answer = lm_generation.generate(args, question)
         status = 'success'

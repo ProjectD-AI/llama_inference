@@ -18,7 +18,7 @@ if __name__ == '__main__':
                         help="Path of the config file.")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Batch size.")
-    parser.add_argument("--seq_length", type=int, default=64,
+    parser.add_argument("--seq_length", type=int, default=128,
                         help="Sequence length.")
     parser.add_argument("--use_int8", action="store_true")
     parser.add_argument("--top_k", type=int, default=40)
