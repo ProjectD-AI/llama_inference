@@ -54,10 +54,10 @@ class MultiHeadedAttention(nn.Module):
         # add cache to reduce compute source.
         self.cache_k = torch.zeros(
             (args.batch_size, args.seq_length, self.heads_num, self.per_head_size)
-        ).cuda()
+        )
         self.cache_v = torch.zeros(
             (args.batch_size, args.seq_length, self.heads_num, self.per_head_size)
-        ).cuda()
+        )
 
     def forward(self, key, value, query, start_pos, mask, freqs_cis):
         batch_size, seq_length, _ = query.size()
@@ -66,8 +66,10 @@ class MultiHeadedAttention(nn.Module):
         query, key, value = [l(x).view(batch_size, -1, heads_num, per_head_size) \
                              for l, x in zip(self.linear_layers, (query, key, value))]
         query, key = apply_rotary_emb(query, key, freqs_cis=freqs_cis)
-        self.cache_k = self.cache_k.to(key)
-        self.cache_v = self.cache_v.to(value)
+        if self.cache_k.device != key.device:
+            self.cache_k = self.cache_k.to(key)
+        if self.cache_v.device != value.device:
+            self.cache_v = self.cache_v.to(value)
 
         self.cache_k[:batch_size, start_pos: start_pos + seq_length] = key
         self.cache_v[:batch_size, start_pos: start_pos + seq_length] = value
