@@ -65,3 +65,4 @@ if __name__ == '__main__':
     with open(args.prediction_path, 'w', encoding='utf-8') as f:
         for res in result:
             f.write(res + '\n')
+            f.write('\n')
