@@ -1,4 +1,5 @@
 import argparse
+import torch
 from utils import load_hyperparam
 from model.tokenize import Tokenizer
 from model.llama import *
@@ -68,7 +69,8 @@ def chat():
     if isinstance(question, str):
         question = [question, ]
     try:
-        answer = lm_generation.generate(args, question)
+        with torch.no_grad():
+            answer = lm_generation.generate(args, question)
         status = 'success'
     except Exception:
         answer = ''
