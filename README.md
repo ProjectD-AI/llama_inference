@@ -61,8 +61,16 @@ python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt  
                       --spm_model_path ./tokenizer.model
 ```
 
-#### 微服务部署 
+<br>
 
+#### 微服务部署 
+```commandline
+python llama_server.py --load_model_path xxxx.bin \
+                       --config_path config.json \
+                       --spm_model_path tokenizer.model
+```
+
+<br>
 
 #### 多卡deepspeed推理 
 

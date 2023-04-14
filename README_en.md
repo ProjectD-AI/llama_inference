@@ -61,6 +61,12 @@ python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt  
 ``` 
 
 #### Microservices deployment 
+```commandline
+python llama_server.py --load_model_path xxxx.bin \
+                       --config_path config.json \
+                       --spm_model_path tokenizer.model
+```
+
 
 <br>
 
