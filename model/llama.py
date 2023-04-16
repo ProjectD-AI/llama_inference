@@ -188,7 +188,7 @@ class LLaMa(nn.Module):
         self.encoder = TransformerEncoder(args)
         self.target = LmOutput(args)
 
-    @torch.inference_mode()
+    #@torch.inference_mode()
     def forward(self, src, start_pos):
         emb = self.embedding(src)
         output = self.encoder(emb, start_pos)
