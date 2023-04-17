@@ -59,7 +59,7 @@ class MultiHeadedAttention(nn.Module):
             (args.batch_size, args.seq_length, self.heads_num, self.per_head_size)
         )
 
-    def forward(self, key, value, query, start_pos, mask, freqs_cis):
+    def forward(self, key, value, query, start_pos, continue_exsample, mask, freqs_cis):
         batch_size, seq_length, _ = query.size()
         heads_num = self.heads_num
         per_head_size = self.per_head_size
@@ -71,11 +71,11 @@ class MultiHeadedAttention(nn.Module):
         if self.cache_v.device != value.device:
             self.cache_v = self.cache_v.to(value)
 
-        self.cache_k[:batch_size, start_pos: start_pos + seq_length] = key
-        self.cache_v[:batch_size, start_pos: start_pos + seq_length] = value
+        self.cache_k[continue_exsample, start_pos: start_pos + seq_length] = key
+        self.cache_v[continue_exsample, start_pos: start_pos + seq_length] = value
 
-        key = self.cache_k[:batch_size, : start_pos + seq_length]
-        value = self.cache_v[:batch_size, : start_pos + seq_length]
+        key = self.cache_k[continue_exsample, : start_pos + seq_length]
+        value = self.cache_v[continue_exsample, : start_pos + seq_length]
 
         query, key, value = [x.transpose(1, 2) for x in (query, key, value)]
 
@@ -101,7 +101,7 @@ class GatedFeedForward(nn.Module):
 
     def forward(self, x):
         # gate = self.act(self.linear_gate(x))
-        gate = self.act(self.linear_gate(x)).type_as(x)
+        gate = self.act(self.linear_gate(x).float()).type_as(x)
         inter_linear = self.linear_1(x)
         inter = gate * inter_linear
         output = self.linear_2(inter)
@@ -132,9 +132,9 @@ class TransformerLayer(nn.Module):
         self.layer_norm_1 = RMSNorm(args.hidden_size)
         self.layer_norm_2 = RMSNorm(args.hidden_size)
 
-    def forward(self, hidden, start_pos, mask, freqs_cis=None):
+    def forward(self, hidden, start_pos, continue_exsample, mask, freqs_cis=None):
         inter = self.layer_norm_1(hidden)
-        inter = self.self_attn(inter, inter, inter, start_pos, mask, freqs_cis)
+        inter = self.self_attn(inter, inter, inter, start_pos, continue_exsample, mask, freqs_cis)
         hidden = hidden + inter
         output = self.layer_norm_2(hidden)
         output = self.feed_forward(output) + hidden
@@ -154,7 +154,7 @@ class TransformerEncoder(nn.Module):
         self.layer_norm = RMSNorm(args.hidden_size)
         self.freqs_cis = precompute_freqs_cis(args.hidden_size // args.heads_num, args.max_seq_length * 2)
 
-    def forward(self, emb, start_pos):
+    def forward(self, emb, start_pos, continue_exsample):
         batch_size, seq_length, _ = emb.size()
         mask = None
         if seq_length > 1:
@@ -167,7 +167,7 @@ class TransformerEncoder(nn.Module):
         freqs_cis = self.freqs_cis[start_pos: start_pos + seq_length].to(hidden.device)
 
         for i in range(self.layers_num):
-            hidden = self.transformer[i](hidden, start_pos, mask, freqs_cis=freqs_cis)
+            hidden = self.transformer[i](hidden, start_pos, continue_exsample, mask, freqs_cis=freqs_cis)
         return self.layer_norm(hidden)
 
 
@@ -189,8 +189,8 @@ class LLaMa(nn.Module):
         self.target = LmOutput(args)
 
     #@torch.inference_mode()
-    def forward(self, src, start_pos):
+    def forward(self, src, start_pos, continue_exsample):
         emb = self.embedding(src)
-        output = self.encoder(emb, start_pos)
+        output = self.encoder(emb, start_pos, continue_exsample)
         output = self.target(output)
         return output

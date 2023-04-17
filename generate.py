@@ -100,15 +100,16 @@ class LmGeneration:
         mask = tokens != self.tokenizer.pad_id
         start_pos = min_prompt_len
         prev_pos = 0
+        continue_exsample = [i for i in range(batch)]
         with torch.no_grad():
             for cur_pos in range(start_pos, total_len):
-                logits = self.model.forward(tokens[:, prev_pos:cur_pos], prev_pos)
+                logits = self.model.forward(tokens[continue_exsample, prev_pos:cur_pos], prev_pos, continue_exsample)
                 if args.temperature > 0:
                     #next_token_scores = top_k_top_p_filtering(logits, top_k=args.top_k, top_p=args.top_p)
                     next_token_scores = apply_top_p(logits, args.top_p)
                     next_token_scores = apply_temperature(next_token_scores, args.temperature)
                     next_token_scores = apply_advanced_repetition_penalty(
-                        tokens[:, :cur_pos],
+                        tokens[continue_exsample, :cur_pos],
                         next_token_scores,
                         args.repetition_penalty_range,
                         args.repetition_penalty_slope,
@@ -120,10 +121,19 @@ class LmGeneration:
                     next_token = torch.argmax(logits, dim=-1)
                 next_token = next_token.reshape(-1)
                 next_token = torch.where(
-                    mask[:, cur_pos], tokens[:, cur_pos], next_token
+                    mask[continue_exsample, cur_pos], tokens[continue_exsample, cur_pos], next_token
                 )
-                tokens[:, cur_pos] = next_token
+                tokens[continue_exsample, cur_pos] = next_token
                 prev_pos = cur_pos
+                # remove eos examples.
+                continue_exsample = []
+                for i, t in enumerate(tokens.tolist()):
+                    try:
+                        t.index(self.tokenizer.eos_id)
+                    except ValueError:
+                        continue_exsample.append(i)
+                if len(continue_exsample) == 0:
+                    break
 
         decoder = []
         for i, t in enumerate(tokens.tolist()):
