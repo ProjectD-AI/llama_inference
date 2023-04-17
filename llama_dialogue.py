@@ -27,7 +27,7 @@ def multi_round_chat(args, lm_generation, keep_length_ratio=0.5):
             input_str = input_str[:int(keep_length_ratio * args.seq_length)]
         answer = lm_generation.generate(args, [input_str])[0]
         print("ChatLLaMa: " + answer + '\n')
-        users.append(user)
+        users.append(user_input)
         answers.append(answer)
 
 
