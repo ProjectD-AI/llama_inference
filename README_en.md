@@ -7,7 +7,7 @@ This project mainly supports LLaMa Inference and Microservice deployment based o
 ### Feature 
 - __Int8 Inference__ Supports int8 inference with the bitsandbytes library, and adds batch inference compared to the LM inference script in tencentpretrain.  
 - __Optimized Inference__ Added cache for key and value in Multi-head Attention, requiring only the newly generated token to be input for each inference. 
-- __Deepspeed Inference__ To be continued. 
+- __LLM Multi-Gpu Inference__ To be continued. 
 - __Microservices__ To be continued. 
 - __LoRA model Inference__ To be continued. 
 
@@ -61,7 +61,9 @@ python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt  
 ``` 
 
 #### Microservices deployment 
+need to install flask
 ```commandline
+pip install flask 
 python llama_server.py --load_model_path xxxx.bin \
                        --config_path config.json \
                        --spm_model_path tokenizer.model
