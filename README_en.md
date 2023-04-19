@@ -5,10 +5,10 @@ This project mainly supports LLaMa Inference and Microservice deployment based o
 <br>
 
 ### Feature 
-- __Int8 Inference__ Supports int8 inference with the bitsandbytes library, and adds batch inference compared to the LM inference script in tencentpretrain.  
+- __Int8 Inference__ Support int8 inference with the bitsandbytes library, and adds batch inference compared to the LM inference script in tencentpretrain.  
 - __Optimized Inference__ Added cache for key and value in Multi-head Attention, requiring only the newly generated token to be input for each inference. 
-- __LLM Multi-Gpu Inference__ Supports tensor parallel multi-gpu inference.
-- __Microservices__ To be continued. 
+- __LLM Multi-Gpu Inference__ Support tensor parallel multi-gpu inference.
+- __Microservices__ Support simple flask microservices.
 - __LoRA model Inference__ To be continued. 
 
 tips: need cuda. 
@@ -68,7 +68,10 @@ python llama_server.py --load_model_path xxxx.bin \
                        --config_path config.json \
                        --spm_model_path tokenizer.model
 ```
-
+curl command:
+```commandline
+curl -H 'Content-Type: application/json' http://127.0.0.1:8888/chat -d '{"question": "xxx"}' 
+```
 
 <br>
 

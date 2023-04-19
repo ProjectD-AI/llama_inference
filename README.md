@@ -10,7 +10,7 @@
 - __Int8推理__ 支持bitsandbytes库的int8推理，相比tencentpretrain中的LM推理脚本，加入了Batch推理。 
 - __优化推理逻辑__ 在Multi-head Attention中加入了key和value的cache，每次inference只需要输入新生成的token。 
 - __大模型多卡推理__ 支持张量并行的多卡推理。
-- __微服务部署__ 施工中，计划开放简单的微服务部署。 
+- __微服务部署__ 支持简单的flask部署。
 - __LoRA模型推理__ 施工中，计划支持使用LoRA训练的模型。 
 
 tips：当前脚本只支持cuda推理，未来计划更多的量化部署推理的功能，敬请期待。 
@@ -70,6 +70,10 @@ pip install flask
 python llama_server.py --load_model_path xxxx.bin \
                        --config_path config.json \
                        --spm_model_path tokenizer.model
+```
+查询命令：
+```commandline
+curl -H 'Content-Type: application/json' http://127.0.0.1:8888/chat -d '{"question": "xxx"}' 
 ```
 
 <br>
