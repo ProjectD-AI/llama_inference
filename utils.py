@@ -39,7 +39,8 @@ def _load_state_dict_into_model(model_to_load, model_path, start_prefix=""):
     if metadata is not None:
         metadata['embedding.embedding'] = metadata['embedding.word.embedding']
         metadata['target.lm'] = metadata['target.lm.output_layer']
-        del metadata['embedding.dropout']
+        if metadata.get('embedding.dropout', None) is not None:
+            del metadata['embedding.dropout']
         del metadata['embedding.word']
         del metadata['embedding.word.embedding']
         del metadata['target.lm.output_layer']
