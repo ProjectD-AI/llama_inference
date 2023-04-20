@@ -31,6 +31,7 @@ tips: need cuda.
 * __--spm_model_path__ (Required) the path of model tokenizer. 
 * __--batch_size__ (Optional) default by 1. suggestion: consistent with the input. 
 * __--seq_length__ (Optional) default by 128. total length of generated content, equal to the length of input and generated sentence. 
+* __--world_size__ （Optional），default by 1. the number of gpus for tensor parallel inference.
 * __--use_int8__ (Optional) default by False. whether use int8 to inference. 
 * __--top_k__ (Optional) default by 40. 
 * __--top_p__ (Optional) default by 0.95. 
@@ -60,6 +61,20 @@ python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt  
                       --spm_model_path ./tokenizer.model
 ``` 
 
+<br>
+
+#### Multi-round chat
+optional parameter: keep_length_ratio. it represents keep the ratio of context.
+enter 'clear' will restart a round of new chat and 'exit' will exit the chat.
+```commandline
+python llama_dialogue.py --load_model_path xxxx.bin \
+                         --config_path config.json \
+                         --spm_model_path tokenizer.model \
+                         --world_size 2
+```
+
+<br>
+
 #### Microservices deployment 
 need to install flask
 ```commandline
@@ -80,10 +95,10 @@ need to install tensor_parallel
 world_size = the number of gpu（gpu id start from 0.）
 ```commandline
 pip install tensor_parallel
-python llama_infer_tp.py --test_path ./prompts.txt --prediction_path ./result.txt \
-                         --load_model_path xxxx.bin \
-                         --config_path config.json \
-                         --spm_model_path tokenizer.model \
-                         --world_size 2
+python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt \
+                      --load_model_path xxxx.bin \
+                      --config_path config.json \
+                      --spm_model_path tokenizer.model \
+                      --world_size 2
 ```
 <br>

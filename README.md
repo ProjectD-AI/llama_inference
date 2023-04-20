@@ -33,6 +33,7 @@ tips：当前脚本只支持cuda推理，未来计划更多的量化部署推理
 * __--spm_model_path__ （必填项），模型tokenizer存放的路径。
 * __--batch_size__ （可选），默认为1。批处理大小，注意按需使用，因为attention cache会根据这个大小来构造tensor并且保存在显存中。
 * __--seq_length__ （可选），默认为128。生成句子的总长度，等于prompts + 模型生成的长度。
+* __--world_size__ （可选），默认为1。使用多少张卡进行张量并行推理。
 * __--use_int8__ （可选），默认为False。是否使用int8推理。
 * __--top_k__ （可选），默认为40。句子的生成会针对top_k做采样，影响生成多样性。
 * __--top_p__ （可选），默认为0.95。句子的生成会针对累积概率top_p做采样，影响生成多样性。
@@ -63,6 +64,19 @@ python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt  
 
 <br>
 
+
+#### 多轮对话
+有可选参数keep_length_ratio，表示保留多少比例的上下文。输入clear会进行新的一轮对话，输入exit会退出。
+```commandline
+python llama_dialogue.py --load_model_path xxxx.bin \
+                         --config_path config.json \
+                         --spm_model_path tokenizer.model \
+                         --world_size 2
+```
+
+<br>
+
+
 #### 微服务部署 
 需要安装flask
 ```commandline
@@ -83,10 +97,10 @@ curl -H 'Content-Type: application/json' http://127.0.0.1:8888/chat -d '{"questi
 参数world_size为希望使用多少gpu（gpu的id从0开始）
 ```commandline
 pip install tensor_parallel
-python llama_infer_tp.py --test_path ./prompts.txt --prediction_path ./result.txt \
-                         --load_model_path xxxx.bin \
-                         --config_path config.json \
-                         --spm_model_path tokenizer.model \
-                         --world_size 2
+python llama_infer.py --test_path ./prompts.txt --prediction_path ./result.txt \
+                      --load_model_path xxxx.bin \
+                      --config_path config.json \
+                      --spm_model_path tokenizer.model \
+                      --world_size 2
 ```
 
