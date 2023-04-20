@@ -21,8 +21,8 @@ def multi_round_chat(args, lm_generation, keep_length_ratio=0.5):
 
         input_str = ''
         for user, ans in zip(users, answers):
-            input_str += 'User:' + user + '\nChatLLaMa:' + ans + '\n'
-        input_str += 'User:' + user_input + '\n'
+            input_str += user + '\n' + ans + '\n'
+        input_str += user_input + '\n'
         if len(input_str) >= int(keep_length_ratio * args.seq_length):
             input_str = input_str[len(input_str) - int(keep_length_ratio * args.seq_length):]
         answer = lm_generation.generate(args, [input_str])[0]
@@ -76,8 +76,17 @@ if __name__ == '__main__':
             parameter.data = checkpoint[parameter_name]
         parameter.requires_grad = False
     del checkpoint
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+
     model.eval()
+    # use multi-gpu tensor parallel
+    if args.world_size > 1:
+        import tensor_parallel as tp
+
+        gpus = ["cuda:" + str(i) for i in range(args.world_size)]
+        model = tp.tensor_parallel(model, gpus)
+    else:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.to(device)
+
     lm_generation = LmGeneration(model, args.tokenizer)
     multi_round_chat(args, lm_generation, args.keep_length_ratio)
