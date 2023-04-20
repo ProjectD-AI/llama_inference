@@ -18,6 +18,8 @@ if __name__ == '__main__':
                         help="Path of the config file.")
     parser.add_argument("--batch_size", type=int, default=1,
                         help="Batch size.")
+    parser.add_argument("--world_size", type=int, default=1,
+                        help="the number of gpus.")
     parser.add_argument("--seq_length", type=int, default=128,
                         help="Sequence length.")
     parser.add_argument("--use_int8", action="store_true")
@@ -51,9 +53,17 @@ if __name__ == '__main__':
             parameter.data = checkpoint[parameter_name]
         parameter.requires_grad = False
     del checkpoint
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
+
     model.eval()
+    # use multi-gpu tensor parallel
+    if args.world_size > 1:
+        import tensor_parallel as tp
+        gpus = ["cuda:" + str(i) for i in range(args.world_size)]
+        model = tp.tensor_parallel(model, gpus)
+    else:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.to(device)
+
     lm_generation = LmGeneration(model, args.tokenizer)
     prompts = []
     with open(args.test_path, 'r', encoding='utf-8') as f:
