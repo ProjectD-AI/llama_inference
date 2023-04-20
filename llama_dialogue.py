@@ -43,6 +43,8 @@ if __name__ == '__main__':
                         help="Path of the config file.")
     parser.add_argument("--seq_length", type=int, default=2048,
                         help="Sequence length.")
+    parser.add_argument("--world_size", type=int, default=1,
+                        help="the number of gpus.")
     parser.add_argument("--keep_length_ratio", type=float, default=0.5)
     parser.add_argument("--use_int8", action="store_true")
     parser.add_argument("--top_k", type=int, default=40)
