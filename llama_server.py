@@ -10,7 +10,6 @@ import json
 app = Flask(__name__)
 args = None
 lm_generation = None
-torch.cuda.set_device(0)
 
 
 def init_model():
@@ -65,6 +64,7 @@ def init_model():
         gpus = ["cuda:" + str(i) for i in range(args.world_size)]
         model = tp.tensor_parallel(model, gpus)
     else:
+        torch.cuda.set_device(0)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
 
