@@ -21,15 +21,15 @@ def multi_round_chat(args, lm_generation, keep_length_ratio=0.5):
 
         input_str = ''
         for user, ans in zip(users, answers):
-            input_str += user + '\n' + ans + '\n'
-        input_str += user_input + '\n'
+            input_str += 'User: ' + user + '\nBot: ' + ans + '\n'
+        input_str += 'User: ' + user_input + '\nBot: '
         if len(input_str) >= int(keep_length_ratio * args.seq_length):
             input_str = input_str[len(input_str) - int(keep_length_ratio * args.seq_length):]
-        answer = lm_generation.generate(args, [input_str])[0]
+        answer = lm_generation.generate(args, [input_str], cut_off='User:', cut_off_times=1)[0]
         answer = answer[len(input_str):]
-        print("ChatLLaMa: " + answer + '\n')
-        users.append(user_input)
-        answers.append(answer)
+        print("ChatLLaMa: " + answer.replace('User:', ''))
+        users.append(user_input.rstrip(' ').rstrip('\n'))
+        answers.append(answer.replace('User:', '').rstrip(' ').rstrip('\n'))
 
 
 if __name__ == '__main__':

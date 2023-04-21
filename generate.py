@@ -72,7 +72,9 @@ class LmGeneration:
         self.model = model
         self.tokenizer = tokenizer
 
-    def generate(self, args, prompts):
+    def generate(self, args, prompts, cut_off=None, cut_off_times=1):
+        if cut_off is not None:
+            cut_off_times = [cut_off_times for i in range(len(prompts))]
         batch = len(prompts)
         assert batch <= args.batch_size
 
@@ -118,6 +120,12 @@ class LmGeneration:
                     try:
                         t.index(self.tokenizer.eos_id)
                     except ValueError:
+                        if cut_off is not None:
+                            if cut_off == self.tokenizer.decode(t[:cur_pos + 1])[-len(cut_off):]:
+                                if cut_off_times[i] == 1:
+                                    continue
+                                else:
+                                    cut_off_times[i] -= 1
                         continue_exsample.append(i)
                 if len(continue_exsample) == 0:
                     break
@@ -126,6 +134,7 @@ class LmGeneration:
         for i, t in enumerate(tokens.tolist()):
             t = t[: args.seq_length]
             try:
+                t = t[: t.index(self.tokenizer.pad_id)]
                 t = t[: t.index(self.tokenizer.eos_id)]
             except ValueError:
                 pass
