@@ -57,9 +57,17 @@ def init_model():
             parameter.data = checkpoint[parameter_name]
         parameter.requires_grad = False
     del checkpoint
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model.to(device)
     model.eval()
+
+    # use multi-gpu tensor parallel
+    if args.world_size > 1:
+        import tensor_parallel as tp
+        gpus = ["cuda:" + str(i) for i in range(args.world_size)]
+        model = tp.tensor_parallel(model, gpus)
+    else:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        model.to(device)
+
     lm_generation = LmGeneration(model, args.tokenizer)
 
 
