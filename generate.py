@@ -80,6 +80,7 @@ class LmGeneration:
 
         # prompt_tokens = [args.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
         prompt_tokens = [args.tokenizer.encode(x, bos=True, eos=True) for x in prompts]
+        each_seq_length = [len(p) for p in prompt_tokens]
 
         min_prompt_len = min([len(x) for x in prompt_tokens])
         # max_prompt_len = max([len(x) for x in prompt_tokens])
@@ -118,6 +119,9 @@ class LmGeneration:
                 # remove eos examples.
                 continue_exsample = []
                 for i, t in enumerate(tokens.tolist()):
+                    if cur_pos == each_seq_length[i]:
+                        continue_exsample.append(i)
+                        continue
                     try:
                         t.index(self.tokenizer.eos_id)
                     except ValueError:
