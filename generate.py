@@ -140,7 +140,7 @@ class LmGeneration:
             t = t[: args.seq_length]
             try:
                 t = t[: t.index(self.tokenizer.pad_id)]
-                t = t[: t.index(self.tokenizer.eos_id)]
+                t = t[: t.index(self.tokenizer.eos_id, each_seq_length[i])]
             except ValueError:
                 pass
             decoder.append(self.tokenizer.decode(t))
