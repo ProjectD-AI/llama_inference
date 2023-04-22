@@ -25,6 +25,8 @@ def init_model():
                         help="Batch size.")
     parser.add_argument("--seq_length", type=int, default=128,
                         help="Sequence length.")
+    parser.add_argument("--world_size", type=int, default=1,
+                        help="the number of gpus.")
     parser.add_argument("--use_int8", action="store_true")
     parser.add_argument("--top_k", type=int, default=40)
     parser.add_argument("--top_p", type=float, default=0.95)
