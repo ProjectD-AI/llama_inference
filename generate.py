@@ -78,7 +78,8 @@ class LmGeneration:
         batch = len(prompts)
         assert batch <= args.batch_size
 
-        prompt_tokens = [args.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
+        # prompt_tokens = [args.tokenizer.encode(x, bos=True, eos=False) for x in prompts]
+        prompt_tokens = [args.tokenizer.encode(x, bos=True, eos=True) for x in prompts]
 
         min_prompt_len = min([len(x) for x in prompt_tokens])
         # max_prompt_len = max([len(x) for x in prompt_tokens])
