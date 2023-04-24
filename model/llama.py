@@ -174,7 +174,8 @@ class TransformerEncoder(nn.Module):
 class LmOutput(nn.Module):
     def __init__(self, args):
         super(LmOutput, self).__init__()
-        Linear = get_linear_layer(args.use_int8)
+        # update: lm output not use int8
+        Linear = get_linear_layer(False)
         self.lm = Linear(args.hidden_size, args.vocab_size, bias=False)
 
     def forward(self, x):

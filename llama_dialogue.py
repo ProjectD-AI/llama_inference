@@ -83,7 +83,6 @@ if __name__ == '__main__':
     # use multi-gpu tensor parallel
     if args.world_size > 1:
         import tensor_parallel as tp
-
         gpus = ["cuda:" + str(i) for i in range(args.world_size)]
         model = tp.tensor_parallel(model, gpus)
     else:

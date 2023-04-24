@@ -82,3 +82,30 @@ def _load_state_dict_into_model(model_to_load, model_path, start_prefix=""):
 
     return model_to_load
 
+
+def convert_normal_parameter_to_int8(model, threshold=6.0, modules_to_not_convert=None, current_key_name=None):
+    import bitsandbytes as bnb
+    modules_to_not_convert = ["lm"] if modules_to_not_convert is None else modules_to_not_convert
+    for name, module in model.named_children():
+        if current_key_name is None:
+            current_key_name = []
+        current_key_name.append(name)
+
+        if len(list(module.children())) > 0:
+            convert_normal_parameter_to_int8(module, threshold, modules_to_not_convert, current_key_name)
+
+        if isinstance(module, bnb.nn.Linear8bitLt) and name not in modules_to_not_convert:
+            # Check if the current key is not in the `modules_to_not_convert`
+            if not any(key in ".".join(current_key_name) for key in modules_to_not_convert):
+                model._modules[name] = bnb.nn.Linear8bitLt(
+                    module.in_features,
+                    module.out_features,
+                    module.bias is not None,
+                    has_fp16_weights=False,
+                    threshold=threshold,
+                )
+                # Force requires grad to False to avoid unexpected errors
+                model._modules[name].requires_grad_(False)
+        # Remove the last key for recursion
+        current_key_name.pop(-1)
+    return model
