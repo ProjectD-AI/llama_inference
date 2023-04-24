@@ -2,6 +2,7 @@ import json
 import sys
 from argparse import Namespace
 import torch
+from model.llama import NormalLinear
 
 
 def load_hyperparam(default_args):
@@ -97,12 +98,10 @@ def convert_normal_parameter_to_int8(model, threshold=6.0, modules_to_not_conver
         if isinstance(module, bnb.nn.Linear8bitLt) and name not in modules_to_not_convert:
             # Check if the current key is not in the `modules_to_not_convert`
             if not any(key in ".".join(current_key_name) for key in modules_to_not_convert):
-                model._modules[name] = bnb.nn.Linear8bitLt(
-                    module.in_features,
-                    module.out_features,
-                    module.bias is not None,
-                    has_fp16_weights=False,
-                    threshold=threshold,
+                model._modules[name].weight = bnb.nn.Int8Params(
+                    module.weight.data,
+                    requires_grad=False,
+                    has_fp16_weights=False
                 )
                 # Force requires grad to False to avoid unexpected errors
                 model._modules[name].requires_grad_(False)

@@ -1,6 +1,6 @@
 import argparse
 import torch
-from utils import load_hyperparam
+from utils import load_hyperparam, convert_normal_parameter_to_int8
 from model.tokenize import Tokenizer
 from model.llama import *
 from generate import LmGeneration
@@ -64,7 +64,11 @@ def init_model():
     if args.world_size > 1:
         import tensor_parallel as tp
         gpus = ["cuda:" + str(i) for i in range(args.world_size)]
-        model = tp.tensor_parallel(model, gpus)
+        if args.use_int8:
+            model = tp.tensor_parallel(model, gpus, delay_init=True)
+            model = convert_normal_parameter_to_int8(model)
+        else:
+            model = tp.tensor_parallel(model, gpus)
     else:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
