@@ -62,16 +62,11 @@ if __name__ == '__main__':
         if args.use_int8:
             import bitsandbytes as bnb
             model = tp.tensor_parallel(model, gpus)
-            for name, parameter in model.named_parameters():
-                print(name)
-                print(parameter)
+            model = convert_normal_parameter_to_int8(model)
+            for key, value in model.named_parameters():
+                print(key)
+                print(value)
             exit()
-            # model = convert_normal_parameter_to_int8(model)
-            # print(model)
-            # for key, value in model.named_parameters():
-            #     print(key)
-            #     print(value)
-            # exit()
 
         else:
             model = tp.tensor_parallel(model, gpus)
