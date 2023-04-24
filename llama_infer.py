@@ -61,13 +61,18 @@ if __name__ == '__main__':
         gpus = ["cuda:" + str(i) for i in range(args.world_size)]
         if args.use_int8:
             import bitsandbytes as bnb
-            model = tp.tensor_parallel(model, gpus, delay_init=True)
-            print(model)
-            model = convert_normal_parameter_to_int8(model)
-            print(model)
+            model = tp.tensor_parallel(model, gpus)
+            for name, parameter in model.named_parameters():
+                print(name)
+                print(parameter)
+            exit()
+            # model = convert_normal_parameter_to_int8(model)
+            # print(model)
             # for key, value in model.named_parameters():
             #     print(key)
             #     print(value)
+            # exit()
+
         else:
             model = tp.tensor_parallel(model, gpus)
     else:
