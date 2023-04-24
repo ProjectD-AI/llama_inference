@@ -93,4 +93,10 @@ def chat():
 
 if __name__ == '__main__':
     init_model()
+    # first pass on request to initialize int8.
+    try:
+        with torch.no_grad():
+            answer = lm_generation.generate(args, ['hello world!'])
+    except Exception:
+        pass
     app.run(host='127.0.0.1', port=8888, debug=False)
