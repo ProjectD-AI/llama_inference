@@ -1,5 +1,5 @@
 import argparse
-from utils import load_hyperparam, convert_normal_parameter_to_int8
+from utils import load_hyperparam, convert_normal_parameter_to_int8, load_model
 from model.tokenize import Tokenizer
 from model.llama import *
 from generate import LmGeneration
@@ -68,16 +68,7 @@ if __name__ == '__main__':
     torch.set_default_tensor_type(torch.HalfTensor)
     model = LLaMa(args)
     torch.set_default_tensor_type(torch.FloatTensor)
-    checkpoint = torch.load(args.load_model_path, map_location='cpu')
-    for parameter_name, parameter in model.named_parameters():
-        if 'target' in parameter_name:
-            parameter.data = checkpoint['target.lm.output_layer.weight']
-        elif 'embedding' in parameter_name:
-            parameter.data = checkpoint['embedding.word.embedding.weight']
-        else:
-            parameter.data = checkpoint[parameter_name]
-        parameter.requires_grad = False
-    del checkpoint
+    model = load_model(model, args.load_model_path)
 
     model.eval()
     # use multi-gpu tensor parallel

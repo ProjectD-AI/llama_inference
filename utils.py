@@ -3,6 +3,7 @@ import sys
 from argparse import Namespace
 import torch
 from model.llama import NormalLinear
+import os
 
 
 def load_hyperparam(default_args):
@@ -107,4 +108,37 @@ def convert_normal_parameter_to_int8(model, threshold=6.0, modules_to_not_conver
                 model._modules[name].requires_grad_(False)
         # Remove the last key for recursion
         current_key_name.pop(-1)
+    return model
+
+
+def load_model(model, model_path):
+    if os.path.isdir(model_path):
+        index_filename = os.path.join(model_path, 'pytorch_model.bin.index.json')
+        with open(index_filename, "r") as f:
+            index = json.loads(f.read())
+        shard_filenames = sorted(set(index["weight_map"].values()))
+        shard_filenames = [os.path.join(model_path, f) for f in shard_filenames]
+        for shard_file in shard_filenames:
+            shard_checkpoint = torch.load(shard_file, map_location='cpu')
+            for name, parameter in model.named_parameters():
+                if shard_checkpoint.get(name, None) is not None:
+                    if 'target' in name:
+                        parameter.data = shard_checkpoint['target.lm.output_layer.weight']
+                    elif 'embedding' in name:
+                        parameter.data = shard_checkpoint['embedding.word.embedding.weight']
+                    else:
+                        parameter.data = shard_checkpoint[name]
+                    parameter.requires_grad = False
+            del shard_checkpoint
+    else:
+        checkpoint = torch.load(model_path, map_location='cpu')
+        for parameter_name, parameter in model.named_parameters():
+            if 'target' in parameter_name:
+                parameter.data = checkpoint['target.lm.output_layer.weight']
+            elif 'embedding' in parameter_name:
+                parameter.data = checkpoint['embedding.word.embedding.weight']
+            else:
+                parameter.data = checkpoint[parameter_name]
+            parameter.requires_grad = False
+        del checkpoint
     return model
