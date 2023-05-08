@@ -28,9 +28,9 @@ def init_model():
     parser.add_argument("--world_size", type=int, default=1,
                         help="the number of gpus.")
     parser.add_argument("--use_int8", action="store_true")
-    parser.add_argument("--top_k", type=int, default=40)
-    parser.add_argument("--top_p", type=float, default=0.95)
-    parser.add_argument("--temperature", type=float, default=0.8)
+    parser.add_argument("--top_k", type=int, default=10)
+    parser.add_argument("--top_p", type=float, default=1)
+    parser.add_argument("--temperature", type=float, default=0.85)
     parser.add_argument("--repetition_penalty_range", type=int, default=1024)
     parser.add_argument("--repetition_penalty_slope", type=float, default=0)
     parser.add_argument("--repetition_penalty", type=float, default=1.15)
