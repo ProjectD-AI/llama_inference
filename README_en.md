@@ -8,7 +8,7 @@ This project mainly supports LLaMa Inference and Microservice deployment based o
 - __Int8 Inference__ Support int8 inference with the bitsandbytes library, and adds batch inference compared to the LM inference script in tencentpretrain.  
 - __Optimized Inference__ Added cache for key and value in Multi-head Attention, requiring only the newly generated token to be input for each inference. 
 - __LLM Multi-Gpu Inference__ Support tensor parallel multi-gpu inference.
-- __Microservices__ Support simple flask microservices.
+- __Microservices__ Support simple flask microservices and gradio-base online demo.
 - __LoRA model Inference__ To be continued. 
 
 tips: need cuda. 
@@ -72,6 +72,18 @@ python llama_dialogue.py --load_model_path xxxx.bin \
                          --spm_model_path tokenizer.model \
                          --world_size 2
 ```
+
+<br>
+
+#### gradio server
+need to install gradio
+```commandline
+pip install gradio
+python llama_gradio.py --load_model_path xxxx.bin \
+                       --config_path config.json \
+                       --spm_model_path tokenizer.model
+```
+website open: http://127.0.0.1:7860/
 
 <br>
 
