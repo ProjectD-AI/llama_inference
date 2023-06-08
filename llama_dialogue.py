@@ -22,12 +22,15 @@ def multi_round_chat(args, lm_generation, keep_length_ratio=0.5):
         input_str = ''
         for user, ans in zip(users, answers):
             input_str += 'User: ' + user + '\nBot: ' + ans + '\n'
-        input_str += 'User: ' + user_input + '\nBot: '
+        if args.ins:
+            input_str = '### Instruction:User: ' + user_input + '\nBot: ### Response:'
+        else:
+            input_str += 'User: ' + user_input + '\nBot: '
         if len(input_str) >= int(keep_length_ratio * args.seq_length):
             input_str = input_str[len(input_str) - int(keep_length_ratio * args.seq_length):]
         answer = lm_generation.generate(args, [input_str], cut_off='User:', cut_off_times=1)[0]
         answer = answer[len(input_str):]
-        print("ChatLLaMa: " + answer.replace('User:', ''))
+        print("ChatFlow: " + answer.replace('User:', ''))
         users.append(user_input.rstrip(' ').rstrip('\n'))
         answers.append(answer.replace('User:', '').rstrip(' ').rstrip('\n'))
 
@@ -53,7 +56,8 @@ if __name__ == '__main__':
     parser.add_argument("--repetition_penalty_range", type=int, default=1024)
     parser.add_argument("--repetition_penalty_slope", type=float, default=0)
     parser.add_argument("--repetition_penalty", type=float, default=1.15)
-
+    parser.add_argument("--ins", action="store_true",
+                        help="Instruction mode (Alpaca format).")
     parser.add_argument("--spm_model_path", default=None, type=str,
                         help="Path of the sentence piece model.")
 

@@ -34,7 +34,8 @@ def init_model():
     parser.add_argument("--repetition_penalty_range", type=int, default=1024)
     parser.add_argument("--repetition_penalty_slope", type=float, default=0)
     parser.add_argument("--repetition_penalty", type=float, default=1.15)
-
+    parser.add_argument("--ins", action="store_true",
+                        help="Instruction mode (Alpaca format).")
     parser.add_argument("--spm_model_path", default=None, type=str,
                         help="Path of the sentence piece model.")
 
@@ -71,6 +72,9 @@ def init_model():
 def chat():
     question = request.json.get("question")
     if isinstance(question, str):
+        if args.ins:
+            question = "### Instruction:" + question + "### Response:"
+
         question = [question, ]
     try:
         with torch.no_grad():
@@ -79,6 +83,7 @@ def chat():
     except Exception:
         answer = ''
         status = 'error'
+    answer[0] = answer[0][len(question[0]): ]
     return json.dumps({'answer': answer, 'status': status}, ensure_ascii=False)
 
 

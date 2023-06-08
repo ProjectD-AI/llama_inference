@@ -29,7 +29,8 @@ if __name__ == '__main__':
     parser.add_argument("--repetition_penalty_range", type=int, default=1024)
     parser.add_argument("--repetition_penalty_slope", type=float, default=0)
     parser.add_argument("--repetition_penalty", type=float, default=1.15)
-
+    parser.add_argument("--ins", action="store_true",
+                        help="Instruction mode (Alpaca format).")
     parser.add_argument("--spm_model_path", default=None, type=str,
                         help="Path of the sentence piece model.")
 
@@ -63,7 +64,10 @@ if __name__ == '__main__':
     prompts = []
     with open(args.test_path, 'r', encoding='utf-8') as f:
         for line in f:
-            prompts.append(line)
+            if args.ins:
+                prompts.append("### Instruction:" + line + "### Response:")
+            else:
+                prompts.append(line)
     with torch.no_grad():
         result = lm_generation.generate(args, prompts)
 
