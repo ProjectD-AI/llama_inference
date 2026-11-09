@@ -114,7 +114,7 @@ def convert_normal_parameter_to_int8(model, threshold=6.0, modules_to_not_conver
 def load_model(model, model_path):
     if os.path.isdir(model_path):
         index_filename = os.path.join(model_path, 'pytorch_model.bin.index.json')
-        with open(index_filename, "r") as f:
+        with open(index_filename, "r", encoding="utf-8") as f:
             index = json.loads(f.read())
         shard_filenames = sorted(set(index["weight_map"].values()))
         shard_filenames = [os.path.join(model_path, f) for f in shard_filenames]
